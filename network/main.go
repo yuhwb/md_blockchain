@@ -120,7 +120,7 @@ func dropCR(data []byte) []byte {
 //编写链接请求处理
 func handleConn(conn net.Conn)  {
 	defer conn.Close()
-	io.WriteString(conn, "Enter a new BPM:")
+	io.WriteString(conn, "Enter a new BPM:\n")
 
 	// 接收数据，新生成区块加入到新链中
 	go func() {
@@ -142,7 +142,7 @@ func handleConn(conn net.Conn)  {
 				ReplaceChain(newBlockChain)
 			}
 			bcServer <- BlockChain
-			io.WriteString(conn , "Enter a new BPM:")
+			io.WriteString(conn , "Enter a new BPM:\n")
 		}
 	}()
 
@@ -157,7 +157,7 @@ func handleConn(conn net.Conn)  {
 				continue
 			}
 			mutex.Unlock()
-			conn.Write(output)
+			io.WriteString(conn,string(output) + "\n")
 		}
 	}()
 
