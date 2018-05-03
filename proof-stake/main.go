@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -47,7 +46,6 @@ func (b *Block) CalculateBlockHash() (h string, err error) {
 		return "", errors.New("nil pointer error")
 	}
 	record := strconv.FormatUint(b.Index, 16) + strconv.FormatInt(b.Timestamp, 16) + strconv.FormatInt(int64(b.BPM), 16) + b.PrevHash + b.Validator
-	fmt.Println(record)
 	h = CalculateHash(CalculateHash(record))
 	return
 }
@@ -157,7 +155,7 @@ func handleConn(conn net.Conn) {
 
 	io.WriteString(conn, "Enter token balance:\n")
 	balanceScanner := bufio.NewScanner(conn)
-	if balanceScanner.Scan() {
+	for balanceScanner.Scan() {
 		balance, err := strconv.Atoi(balanceScanner.Text())
 		if err != nil {
 			log.Fatalf("%v not a number:%v", balanceScanner.Text(), err.Error())
@@ -166,7 +164,7 @@ func handleConn(conn net.Conn) {
 		t := time.Now()
 		address = CalculateHash(t.String())
 		validators[address] = balance
-		fmt.Println(validators)
+		break
 	}
 
 	go func() {
@@ -197,19 +195,19 @@ func handleConn(conn net.Conn) {
 	}()
 
 	// 广播区块链
-	go func() {
-		for {
-			time.Sleep(30 * time.Second)
-			mutex.Lock()
-			output, err := json.MarshalIndent(BlockChain, "", "  ")
-			mutex.Unlock()
-			if err != nil {
-				log.Fatalln(err.Error())
-				continue
-			}
-			io.WriteString(conn, string(output)+"\n")
+	for {
+		time.Sleep(30 * time.Second)
+		mutex.Lock()
+		output, err := json.MarshalIndent(BlockChain, "", "  ")
+		mutex.Unlock()
+		if err != nil {
+			log.Fatalln(err.Error())
+			continue
 		}
-	}()
+		s := string(output)
+		log.Println("\n" + s)
+		io.WriteString(conn, s+"\n")
+	}
 }
 
 func main() {
